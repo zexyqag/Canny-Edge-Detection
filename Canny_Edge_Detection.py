@@ -13,6 +13,8 @@ class EdgeHandling(Enum):
 class KernelType(Enum):
     pascal = 1
     mean = 2
+    sobely = 3
+    sobelx = 4
 
 def GrayScale(img):
     img = img.copy()
@@ -38,12 +40,28 @@ def Convolution(image, kernel, edgeHandling):
                         ni = k + n - kernelRadius
                         if (mi >= 0 <= ni and mi < len(image) and ni < len(image[j]) and element != 0):
                             accumulator += int(image[mi][ni][l]) * element
-                            cals += element
+                            cals += abs(element)
                 modImg[j][k][l] = accumulator / cals
     return modImg
 
-
-def KernelGenerator(size, kernelType):
+def KernelGenerator(*args):
+    if (len(args) == 0):
+        raise Exception('Missing first argument of type KernelType')
+    elif (len(args) >= 3):
+        raise Exception('Too many arugments')
+    elif (len(args) == 1):
+        kernelType = args[0]
+        size = 3
+        if (type(kernelType) != KernelType):
+            raise Exception('First arguemnt needs to be of type KernelType')
+    elif (len(args) == 2):
+        kernelType = args[0]
+        size = args[1]
+        if (type(size) != int):
+            raise Exception('Second argument needs to be of type int')
+        elif (type(kernelType) != KernelType):
+            raise Exception('First arguemnt needs to be of type KernelType')
+        
     if (kernelType == KernelType.pascal):
         size -= 1
         row = [1]
@@ -52,6 +70,14 @@ def KernelGenerator(size, kernelType):
         return MetrixFromRow(row)
     elif (kernelType == KernelType.mean):
         return MetrixFromRow([1 for x in range(size)])
+    elif (kernelType == KernelType.sobelx):
+        return [[1,0,-1],
+                [2,0,-2],
+                [1,0,-1]]
+    elif (kernelType == KernelType.sobely):
+        return [[1, 2, 1],
+                [0, 0, 0],
+                [-1,-2,-1]]
         
 
 def MetrixFromRow(row):
@@ -63,9 +89,14 @@ def MetrixFromRow(row):
 
 
 if __name__ == '__main__':
-    image = cv2.imread('image.jpg')
+    image = cv2.imread('image2.jpg')
     cv2.imshow('image0', image)
-    cv2.imshow('image1', Convolution(image, KernelGenerator(7,KernelType.pascal), EdgeHandling.kernelCrop))
-    cv2.imshow('image2', Convolution(image, KernelGenerator(7,KernelType.mean), EdgeHandling.kernelCrop))
+    image = GrayScale(image)
+    cv2.imshow('image1', image)
+    image = Convolution(image, KernelGenerator(KernelType.pascal, 11), EdgeHandling.kernelCrop)
+    cv2.imshow('image2', image)
+    image = Convolution(image, KernelGenerator(KernelType.sobelx), EdgeHandling.kernelCrop)
+    cv2.imshow('image3', image)
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
