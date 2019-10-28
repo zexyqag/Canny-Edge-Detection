@@ -14,6 +14,9 @@ class KernelType(Enum):
     outline = 8
     sobely45 = 9
     sobelx45 = 10
+    sharpen = 11
+    sobel5x5y = 12
+    sobel5x5x = 13
 
 def GrayScale(img):
     img = img.copy()
@@ -104,6 +107,22 @@ def KernelGenerator(*args):
         return [[-2,-1, 0],
                 [-1, 0, 1],
                 [ 0, 1, 2]]
+    elif (kernelType == KernelType.sharpen):
+        return [[0, -1, 0],
+                [-1, 5, -1],
+                [ 0, -1, 0]]
+    elif (kernelType == KernelType.sobel5x5y):
+        return [[ 2, 2, 4, 2, 2],
+                [ 1, 1, 2, 1, 1],
+                [ 0, 0, 0, 0, 0],
+                [-1,-1,-2,-1,-1],
+                [-2,-2,-4,-2,-2]]
+    elif (kernelType == KernelType.sobel5x5x):
+        return [[ 2, 1, 0,-1,-2],
+                [ 2, 1, 0,-1,-2],
+                [ 4, 2, 0,-2,-4],
+                [ 2, 1, 0,-1,-2],
+                [ 2, 1, 0,-1,-2]]
         
 def MetrixFromRow(row):
     metrix = [[0 for x in range(len(row))] for y in range(len(row))]
@@ -140,20 +159,41 @@ if __name__ == '__main__':
     cv2.imshow('imageGray', imageGray)
 
     #Blur image
-    imageBlured = Convolution(imageGray, KernelGenerator(KernelType.pascal, 11), True)
+    imageBlured = Convolution(imageGray, KernelGenerator(KernelType.pascal, 3), True)
     cv2.imshow('imageBlured', imageBlured)
 
     #Detect edges image
-    imageEdge = Convolution(imageBlured, KernelGenerator(KernelType.sobelx45), False)
-    cv2.imshow('imageEdge', ImageNormalization(imageEdge))
+    imageSobelx = Convolution(imageBlured, KernelGenerator(KernelType.sobel5x5x), False)
+    cv2.imshow('imageSobelx', ImageNormalization(imageSobelx))
+    imageSobely = Convolution(imageBlured, KernelGenerator(KernelType.sobel5x5y), False)
+    cv2.imshow('imageSobely', ImageNormalization(imageSobely))
 
     #Get Magnetude
-    imageMagnetude = ImageNormalization(GradientMagnitude(imageEdge, imageEdge))
+    imageMagnetude = ImageNormalization(GradientMagnitude(imageSobelx, imageSobely))
     cv2.imshow('imageMagnetude', imageMagnetude)
 
     #Threshold image
-    imageThreshold = ImageThresholding(imageMagnetude, 50)
+    imageThreshold = ImageThresholding(imageMagnetude, 33)
     cv2.imshow('imageThreshold', imageThreshold)
+
+
+
+    #Image Outline
+    imageOutline = Convolution(imageBlured, KernelGenerator(KernelType.outline), False)
+    cv2.imshow('imageOutline', ImageNormalization(imageOutline))
+
+    #Image Emboss
+    imageEmboss = ImageNormalization(Convolution(imageBlured, KernelGenerator(KernelType.emboss), False))
+    cv2.imshow('imageEmboss', imageEmboss)
+
+    #Image sharpen
+    imageSharpen = Convolution(image, KernelGenerator(KernelType.sharpen), True)
+    cv2.imshow('imageEmboss', imageEmboss)
+
+
+    #Outline Magnetude
+    imageOutlineMagnetude = ImageNormalization(GradientMagnitude(imageOutline, imageOutline))
+    cv2.imshow('imageOutlineMagnetude', imageOutlineMagnetude)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
