@@ -2,7 +2,7 @@ certifi==2019.6.16
 mkl-fft==1.0.14
 mkl-random==1.1.0
 mkl-service==2.3.0
-numpy==1.16.5
+numpy==1.22.0
 pip==19.2.3
 setuptools==41.4.0
 six==1.12.0
